@@ -1,0 +1,74 @@
+create or replace FUNCTION osszeg(p_char VARCHAR2) RETURN number IS
+  --TYPE tomb IS TABLE OF Number INDEX BY Number;
+  darab Number :=0;
+  szum Number :=0;
+  kezd Number :=1;
+  plus Number :=1;
+begin
+  select (length(p_char) - length(replace(p_char,'+',''))) into darab from dual;
+  plus := instr(p_char,'+',kezd,1);
+  FOR I IN 1..darab LOOP
+   szum := szum + TO_NUMBER(substr(p_char,kezd,1));
+   kezd := plus+1;
+   --DBMS_OUTPUT.PUT_LINE(TO_STRING(kezd));
+   plus := instr(p_char,'+',kezd,1);
+  END LOOP;
+  szum := szum + TO_NUMBER(substr(p_char,kezd,1));
+  return szum;
+end;
+
+--add vissza a paraméterként kapott szám felbontását prímtényezõk szorzatára
+--2. feladat:
+create or replace FUNCTION felbontas(p1 integer) RETURN varchar2 IS
+  eredmeny varchar2(60);
+  szam number := p1;
+  valtozo number :=2;
+  elso Boolean :=True;
+begin
+  while (szam > 1) loop
+    while (Mod(szam,valtozo)=0) loop
+      if elso = True then
+        eredmeny:= concat(eredmeny,TO_CHAR(valtozo));
+        elso:=False;
+      else
+        eredmeny:= concat(eredmeny,concat('*',TO_CHAR(valtozo)));
+      end if;
+      szam:=szam/valtozo;
+    end loop;
+    valtozo:= valtozo+1;
+  end loop;
+  return eredmeny;
+end felbontas;
+/
+SELECT 2 from dual WHERE Mod(2,3)=0;
+SELECT concat('*',TO_CHAR(2)) from dual;
+SELECT felbontas(100) from dual;
+
+set serveroutput on
+create or replace PROCEDURE gazdag_leszarmazott IS
+CURSOR curs1 IS SELECT nev from nikovits.vagyonok;
+veg number:=1;
+  aktmaxvagyon number;
+  aktvagyon number;
+  darab number;
+  rec curs1%ROWTYPE;
+begin
+  OPEN curs1;
+  LOOP
+    FETCH curs1 INTO rec;
+    EXIT WHEN curs1%NOTFOUND;
+    SELECT vagyon into aktvagyon from nikovits.vagyonok WHERE nev=rec.nev;
+    SELECT max(seged.vagyon) into aktmaxvagyon from(
+      SELECT    vagyon
+      FROM nikovits.vagyonok
+      WHERE vagyon > aktvagyon
+      START WITH  nev=(rec.nev)
+      CONNECT BY  PRIOR nev = apja) seged;
+    if aktmaxvagyon is NOT NULL then
+    DBMS_OUTPUT.PUT_LINE (to_char(rec.nev));
+    end if;
+  END LOOP;
+  CLOSE curs1;
+  --SELECT COUNT(*) into darab from nikovits.vagyonok;
+end;
+/
