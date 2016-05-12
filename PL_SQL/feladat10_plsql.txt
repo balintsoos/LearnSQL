@@ -1,0 +1,90 @@
+Írjunk meg egy függvényt, amelyik visszaadja egy adott fizetési kategóriába tartozó
+dolgozók átlagfizetését.
+  (SELECT ... INTO ...)
+CREATE OR REPLACE FUNCTION kat_atlag(n integer) RETURN number IS
+
+
+create or replace FUNCTION kat_atlag(n integer) RETURN number IS
+  atlag number;
+  minn integer;
+  maxx integer;
+  i integer := n;
+BEGIN
+  SELECT also INTO minn FROM nikovits.fiz_kategoria WHERE kategoria = n;
+  SELECT felso INTO maxx FROM nikovits.fiz_kategoria WHERE kategoria = n;
+  SELECT avg(fizetes) INTO atlag FROM nikovits.dolgozo WHERE fizetes >= minn and fizetes <= maxx;
+  return atlag;
+END;
+----------------------------------------------------------------
+
+
+Írjunk meg egy plsql programot (név nélküli blokkot), amelyik veszi a dolgozókat ábácé 
+szerinti sorrendben, és minden páratlan sorszámú dolgozó nevét és fizetését beleteszi 
+egy asszociatív tömbbe. A program a végén írja ki a tömb utolsó elõtti sorát.
+  (plsql asszociatív tömb használata)
+
+create or replace PROCEDURE asszoc_tomb AS
+  i integer := 2;
+  TYPE fizuk_t IS TABLE OF NUMBER INDEX BY VARCHAR2(30);
+  fizuk fizuk_t;
+  key varchar2(30);
+  
+BEGIN  
+  FOR dolgozo_rec IN (SELECT dnev, fizetes FROM nikovits.dolgozo ORDER BY dnev) LOOP
+    IF mod(i, 2) = 0 THEN
+      fizuk(dolgozo_rec.dnev) := dolgozo_rec.fizetes;
+    END IF;
+    i := i + 1;
+  END LOOP;
+  
+  key := fizuk.prior(fizuk.last);
+  dbms_output.put_line('nev= ' || key || ', fizetes= ' || fizuk(key));
+  
+END;
+----------------------------------------------------------------
+
+
+Írjunk meg egy plsql programot (név nélküli blokkot), amelyik kiírja azon dolgozók 
+nevét és belépési dátumát, akik a felhasználó által megadott osztályon dolgoznak. 
+A felhasználó az osztály nevének elsõ betûjét adja meg (ACCEPT-tel kérjük be). 
+A program írja ki az osztály nevét is. Ha nincs megfelelõ osztály, akkor azt írja ki.
+  (paraméteres kurzor)
+
+
+ACCEPT o CHAR PROMPT 'Adja meg az osztály elsõ betûjét:'
+SET verify off
+set serveroutput on;
+DECLARE
+  betu VARCHAR2(1) := '&o';
+  azonosito integer := 0;
+  osztalynev varchar2(10);
+BEGIN
+  
+  SELECT oazon INTO azonosito FROM nikovits.osztaly WHERE substr(onev, 1, 1) = betu;
+  SELECT onev INTO osztalynev FROM nikovits.osztaly WHERE substr(onev, 1, 1) = betu;
+    
+  IF azonosito = 0 THEN
+    dbms_output.put_line('Nincs megfelelo osztaly');
+  ELSE  
+    dbms_output.put_line(osztalynev);
+    FOR dolgozo_rec IN (SELECT dnev, belepes FROM nikovits.dolgozo WHERE oazon = azonosito) LOOP
+      dbms_output.put_line('nev: ' || dolgozo_rec.dnev || ', belepes: ' || dolgozo_rec.belepes);
+    END LOOP;
+  END IF;
+  
+  EXCEPTION
+    when others then
+      dbms_output.put_line('Nincs megfelelo osztaly');
+END;
+----------------------------------------------------------------
+
+
+Írjunk meg egy procedúrát, amelyik módosítja a paraméterében megadott osztályon a fizetéseket, és 
+kiírja a dolgozó nevét és új fizetését.  A módosítás mindenki fizetéséhez adjon hozzá n*10 ezret, 
+ahol n a dolgozó nevében levõ magánhangzók száma (a, e, i, o, u).
+  (módosítás kurzorral)
+
+CREATE OR REPLACE PROCEDURE fiz_mod(p_oazon INTEGER) IS 
+
+----------------------------------------------------------------
+

@@ -1,0 +1,61 @@
+Írjunk meg egy függvényt, amelyik egy karakteres típusú paraméterben egy dátumot 
+kap a következõ formátumban: 'éééé.hh.nn' vagy 'nn.hh.éééé'. 
+A függvény adja vissza a nap nevét, pl. 'kedd'.
+Ha a megadott karakterlánc nem egy érvényes dátum, akkor adja vissza, hogy 'rossz dátum'.
+
+CREATE OR REPLACE FUNCTION nap_nev(p_kar varchar2) RETURN varchar2 IS
+
+----------------------------------------------------------------
+
+
+Írjunk meg egy procedúrát, amelyik a paraméterében kapott számra külön sorokba kiírja 
+annak reciprokát, négyzetgyökét, és faktoriálisát. Ha bármelyik nem értelmezhetõ vagy
+túlcsordulást okoz, akkor erre a részre írja ki a kapott hibakódot. (SQLCODE).
+
+CREATE OR REPLACE PROCEDURE szamok(n number) IS
+
+----------------------------------------------------------------
+
+
+
+
+CREATE OR REPLACE PROCEDURE szamok(n number) IS 
+  
+  faktor integer := 1;
+  
+BEGIN
+  
+  BEGIN
+    dbms_output.put_line(1/n);
+  EXCEPTION
+    when others then
+      dbms_output.put_line(sqlerrm);
+  END;
+  
+  BEGIN
+    dbms_output.put_line(sqrt(n));
+  EXCEPTION
+    when others then
+      dbms_output.put_line(sqlerrm);
+  END;
+
+  BEGIN
+    IF n >= 0 AND n <= 1 THEN
+      dbms_output.put_line(1);
+    ELSE
+      IF n > 0 THEN
+        FOR i IN 1 .. n LOOP
+          faktor := faktor * i;
+        END LOOP;
+        dbms_output.put_line(faktor);
+      ELSE
+        RAISE value_error;
+      END IF;  
+    END IF;
+    
+    EXCEPTION
+      when others then
+        dbms_output.put_line(sqlerrm); 
+  END;
+  
+END;
