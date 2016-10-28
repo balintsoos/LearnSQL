@@ -53,3 +53,23 @@ select owner, table_name from dba_tab_columns
 where data_type = 'DATE'
 group by owner, table_name
 having count(*) = 1;
+
+select * from dba_part_tables;
+
+SELECT column_name, column_position FROM dba_part_key_columns 
+WHERE owner='SH' AND name='COSTS' AND object_type='TABLE';
+
+SELECT owner, segment_name, SUM(bytes) FROM dba_segments 
+WHERE segment_type LIKE 'TABLE%PARTITION'
+GROUP BY owner, segment_name
+ORDER BY SUM(bytes) DESC;
+
+select owner, cluster_name from dba_clusters
+minus
+select owner, cluster_name from dba_tables;
+
+select owner, cluster_name from dba_tables
+where cluster_name is not null
+group by owner, cluster_name
+having count(*) >= 6;
+
